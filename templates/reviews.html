@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews - Coral Bay Hotel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <!-- Include the header -->
+    {% include 'header.html' %}
+
+    <div class="reviews-container">
+        <h2>Guest Reviews</h2>
+
+        <!-- Button to redirect to the Submit Review page -->
+        <div class="submit-review-btn">
+            <a href="{{ url_for('submit_review') }}" class="btn">Submit Your Review</a>
+        </div>
+
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="review-item">
+                <div class="review-header">
+                    <h3>{{ review.name }}</h3>
+                    <span class="rating-stars">
+                        {% for i in range(review.rating) %}
+                            &#9733;
+                        {% endfor %}
+                    </span>
+                </div>
+                <p class="review-text">{{ review.text }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No reviews yet. Be the first to submit a review!</p>
+        {% endif %}
+    </div>
+
+    <!-- Include the footer -->
+    {% include 'footer.html' %}
+</body>
+</html>

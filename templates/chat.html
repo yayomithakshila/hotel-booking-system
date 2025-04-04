@@ -1,0 +1,185 @@
+{% include 'header.html' %}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        Hotel Chatbot
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="chat-messages" class="mb-3" style="height: 400px; overflow-y: auto;">
+                        <div class="message system">
+                            <div class="message-content">
+                                Welcome to Coral Bay Hotel! How can I help you today? You can type your question or select from the common questions on the right.
+                            </div>
+                        </div>
+                    </div>
+                    <form id="chat-form" class="d-flex">
+                        <input type="text" id="user-input" class="form-control me-2" placeholder="Type your question here..." required>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Common Questions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group" id="predefined-questions">
+                        {% for qa in predefined_questions %}
+                        <button class="list-group-item list-group-item-action predefined-question">
+                            {{ qa.question }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.message.user {
+    align-items: flex-end;
+}
+
+.message.bot {
+    align-items: flex-start;
+}
+
+.message.system {
+    align-items: center;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    white-space: pre-line;
+}
+
+.message.user .message-content {
+    background-color: #007bff;
+    color: white;
+}
+
+.message.bot .message-content {
+    background-color: #e9ecef;
+}
+
+.message.system .message-content {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.message.error .message-content {
+    background-color: #dc3545;
+    color: white;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.predefined-question {
+    text-align: left;
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+}
+
+.predefined-question:hover {
+    background-color: #e9ecef;
+    transform: translateX(5px);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const predefinedQuestions = document.querySelectorAll('.predefined-question');
+
+    function addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.textContent = content;
+        
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+        addMessage(message, 'user');
+        userInput.value = '';
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: message })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            addMessage(data.answer, 'bot');
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage('Sorry, there was an error processing your request. Please try again later.', 'error');
+        }
+    }
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (message) {
+            sendMessage(message);
+        }
+    });
+
+    predefinedQuestions.forEach(button => {
+        button.addEventListener('click', function() {
+            const question = this.textContent.trim();
+            sendMessage(question);
+        });
+    });
+});
+</script>
+
+{% include 'footer.html' %} 
